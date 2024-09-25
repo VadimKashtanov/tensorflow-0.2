@@ -43,14 +43,24 @@ def montrer(l, i, N):
 
 #	======================================================================
 
-from données import binance_btcusdt_15m, bitget_btcusdt_1H, bitget_btcusdt_15m, eurousdt, CAC_40_Données_Historiques
+from données import binance_btcusdt_15m
 
 if __name__ == "__main__":
 	df, Close, la_Date = binance_btcusdt_15m(verbose=True)
+	#
+	print(df)
+	#
+	infos_a_montrer = 'Close', 'qaV', 'trades', 'btcVol', 'usdtVol', 'volume'
+	#
+	A = int(1 + len(infos_a_montrer)**.5)
+	fig, ax = plt.subplots(A, A)
+	for i,nom in enumerate(infos_a_montrer):
+		ax[i%2][i//2].plot(df[nom], label=nom)
+		ax[i%2][i//2].legend()
+	plt.show()
+	#
 else:
 	df, Close, la_Date = binance_btcusdt_15m()
-
-infos = 'OUnix','CUnix','ODate','CDate','Symbol','Open','High','Low','Close','qaV','trades','btcVol','usdtVol'
 
 VALIDATION = 2048
 
@@ -65,9 +75,7 @@ VALIDATION = 2048
 	[ .1*(df['trades']/df['trades'].ewm(com=1000).mean()),	(1,8,64,256),],
 ]"""
 
-contextualiser = lambda arr, _ema: (arr - _ema)/(arr + _ema)
-
-N = 7#8
+N = 8
 MAX_I    = 8
 MAX_ROLL = N*MAX_I
 
@@ -124,24 +132,21 @@ U = 4
 if __name__ == "__main__":
 	print("Création des données ...")
 
-	#X = np.zeros((T-DEPART, nb_expertises, N))
 	X = np.zeros((T-DEPART, N, nb_expertises))
 
-	for t in tqdm(range(DEPART,T), desc="Création des X : ", ncols=100, bar_format="{l_bar}{bar:20}{r_bar}", colour="green"):#range(DEPART, T):
+	for t in tqdm(range(DEPART, T), desc="Création des X : ", ncols=100, bar_format="{l_bar}{bar:20}{r_bar}", colour="green"):
 		ie = 0
-		#	Transpose (infos*expertises) <-> N (car conv1d prend les choses a l'envers)
 		for l,Is in Expertises:
 			for I in Is:
 				for n in range(N):
-					#X[t-DEPART][ie][N-n-1] = l[t - n*I]
 					X[t-DEPART][N-n-1][ie] = l[t - n*I]
 				ie += 1
 
 	#	===========================================
 	
-	"""Y = np.zeros((T-DEPART, 2))
+	Y = np.zeros((T-DEPART, 2))
 
-	for t in tqdm(range(DEPART,T), desc="Création des Y : ", ncols=100, bar_format="{l_bar}{bar:20}{r_bar}", colour="green"):
+	for t in tqdm(range(DEPART, T), desc="Création des Y : ", ncols=100, bar_format="{l_bar}{bar:20}{r_bar}", colour="green"):
 		prochains = [df['Close'][t+1+u]/df['Close'][t]-1 for u in range(U)]
 		#
 		hausse = max([0.0] + [abs(p) for p in prochains if p > 0.0])
@@ -152,9 +157,12 @@ if __name__ == "__main__":
 		#
 		Y[t-DEPART][0] = s[0]
 		Y[t-DEPART][1] = s[1]
-	"""
 
-	Y = np.array([[100*(df['Close'][t+1]/df['Close'][t]-1 if t!=T-1 else 0.0)] for t in range(DEPART, T)])
+	print(t, T, len(df['Close']))
+	print(prochains)
+	print(Y[-10:])
+
+	#Y = np.array([[100*(df['Close'][t+1]/df['Close'][t]-1 if t!=T-1 else 0.0)] for t in range(DEPART, T)])
 
 	#	================== Montrer ================
 

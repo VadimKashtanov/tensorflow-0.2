@@ -14,7 +14,7 @@ def ligne_rouge(l):
 ############################################################################################################""
 ############################################################################################################""
 
-def binance_btcusdt_15m(verbose=False):
+def binance_btcusdt_15m(verbose=False): #Close, qaV, trades, btcVol, usdtVol
 	colonnes = "OUnix,CUnix,ODate,CDate,Symbol,Open,High,Low,Close,qaV,trades,btcVol,usdtVol"
 	fichier  = './binance_btcusdt_15m.csv'
 	date     = 'Date'
@@ -42,6 +42,10 @@ def binance_btcusdt_15m(verbose=False):
 	#
 	#
 	DEPART = 26
+	#
+	#	=== Informations complémentaires ===
+	#
+	df['volume'] = df['btcVol'] - df['usdtVol'] / df['Close']
 	#
 	#	=== Analyses techniques ===
 	#
