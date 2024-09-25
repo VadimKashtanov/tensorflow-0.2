@@ -1,37 +1,6 @@
 #! /usr/bin/python3
-import numpy as np
-import pandas as pd
-import tensorflow as tf
-import matplotlib.pyplot as plt
-#
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-from tensorflow.keras.models import Model, Sequential, load_model
-#
-from keras import backend as K
-from tensorflow.keras.layers import Input, Dropout, Flatten, Permute, Reshape, Lambda
-from tensorflow.keras.layers import Dense, Activation, Multiply
-from tensorflow.keras.layers import Conv1D, MaxPooling1D
-from tensorflow.keras.layers import LayerNormalization
-#
-from keras_nlp.layers import PositionEmbedding, TransformerEncoder, TransformerDecoder
-#
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.regularizers import l2
-#
-from tensorflow.keras.utils import Progbar
-#
-from random import randint, random, shuffle
-from math import log, tanh
-from os import system
-import concurrent.futures
-from tqdm import tqdm
-import time
-import struct as st
 
-def ema(l,K):
-	e = [l[0]]
-	for a in l[1:]: e.append(e[-1]*(1-1/K) + a/K)
-	return np.array(e)
+from from_import import *
 
 #	======================================================================
 
@@ -43,24 +12,20 @@ def montrer(l, i, N):
 
 #	======================================================================
 
-from données import binance_btcusdt_15m
+from csv_vers_panda import binance_btcusdt_15m
+
+df, (interv_dfs, infos, intervalles), (Close, la_Date) = binance_btcusdt_15m(verbose=(__name__ == "__main__"))
+print(df)
 
 if __name__ == "__main__":
-	df, Close, la_Date = binance_btcusdt_15m(verbose=True)
 	#
-	print(df)
-	#
-	infos_a_montrer = 'Close', 'qaV', 'trades', 'btcVol', 'usdtVol', 'volume'
-	#
-	A = int(1 + len(infos_a_montrer)**.5)
+	A = int(1 + len(infos)**.5)
 	fig, ax = plt.subplots(A, A)
-	for i,nom in enumerate(infos_a_montrer):
-		ax[i%2][i//2].plot(df[nom], label=nom)
+	for i,nom in enumerate(infos):
+		for j,I in enumerate(intervalles):
+			ax[i%2][i//2].plot(interv_dfs[j][nom], label=f'{nom} I={I}')
 		ax[i%2][i//2].legend()
 	plt.show()
-	#
-else:
-	df, Close, la_Date = binance_btcusdt_15m()
 
 VALIDATION = 2048
 

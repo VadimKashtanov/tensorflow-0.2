@@ -1,36 +1,8 @@
 #! /usr/bin/python3
-import numpy as np
-import pandas as pd
-import tensorflow as tf
-import matplotlib.pyplot as plt
-#
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, Callback
-from tensorflow.keras.models import Model, Sequential, load_model
-from keras.saving import register_keras_serializable
-#
-from keras import backend as K
-from tensorflow.keras.layers import Layer
-from tensorflow.keras.layers import LSTM
-from tensorflow.keras.layers import Input, Dropout, Flatten, Permute, Reshape, Lambda, concatenate
-from tensorflow.keras.layers import Dense, Activation, Multiply
-from tensorflow.keras.layers import Conv1D, SeparableConv1D, DepthwiseConv1D, Conv1DTranspose, MaxPooling1D, AveragePooling1D
-from tensorflow.keras.layers import Conv2D, SeparableConv2D, DepthwiseConv2D, Conv2DTranspose, MaxPooling2D, AveragePooling2D
-from tensorflow.keras.layers import LayerNormalization, BatchNormalization
-#
-from keras_nlp.layers import PositionEmbedding, TransformerEncoder, TransformerDecoder
-#
-from tensorflow.keras.optimizers import Adam, SGD, RMSprop
-from tensorflow.keras.regularizers import l2
-#
-from tensorflow.keras.utils import Progbar
-#
-from random import randint, random, shuffle
-from math import log, tanh
-from os import system
-import concurrent.futures
-from tqdm import tqdm
-import time
-import struct as st
+
+from from_import import *
+
+###################################################
 
 @register_keras_serializable()
 def t2d(x): return tf.transpose(x, perm=[0, 2, 1])

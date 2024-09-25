@@ -124,7 +124,12 @@ if __name__ == "__main__":
 	#
 	assert temporalitée in ('1D', '1H', '15m', '5m', '3m', '1m')
 	#
-	if temporalitée == '1H' and elements > 28000:
-		print("\033[91mAttention : binance a des erreurs dans ces données plus ou moins avant 28000 !\033[0m")
-	#
 	ecrire_le_csv(temporalitée, elements, nom_csv)
+	
+	print("")
+	print(" =============================================== ")
+	print("")
+
+	from reparer_un_csv import reparer_un_csv
+
+	reparer_un_csv(nom_csv)
