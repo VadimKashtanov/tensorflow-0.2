@@ -64,16 +64,6 @@ def custom_loss(y_true, y_pred):
 	_y = tf.stop_gradient(y)
 	_h = tf.stop_gradient(h)
 	#
-	#Y = tf.pow(tf.sign(w)     - y0, 2) * tf.abs()# * _h #(0+yh) * _h
-	#Y = tf.pow(tf.sign(w) - y0, 2) * 10*tf.abs(w)*_h# * _h #(0+yh) * _h
-	#H = tf.pow(tf.sign(w*_y)  - y1, 2 + 2*tf.whitch(tf.sign(w*_y) > 0)) *  1  #(1-yh)
-	#
-	#Y = tf.pow(tf.sign(w) - y0, 2) * tf.abs(w) * h + tf.pow(1 - h, 2)
-	#l = tf.pow(w - tf.stop_gradient(y0), 2)
-	# = l / tf.reduce_mean(l)
-	#Y = tf.pow(tf.sign(w)-y0, 2)/2 * tf.pow(w, 2)#tf.pow(w - y0, 2)# * tf.abs(w)# * (1 - tf.exp(-l*l))
-	#
-	#Y = -( tf_logistique(tf.sign(w))*tf.math.log(tf_logistique(y)) + (1-tf_logistique(tf.sign(w)))*tf.math.log(1-tf_logistique(y)))
 	Y = tf.pow(tf.sign(w) - y0, 2)/2
 	#
 	return (tf.reduce_mean(Y))# + tf.reduce_mean(H))/2
@@ -82,9 +72,9 @@ def custom_loss(y_true, y_pred):
 
 from cree_les_données import df, VALIDATION, N, nb_expertises, T, DEPART, SORTIES
 
-X_train = (T-DEPART-VALIDATION, N, nb_expertises)#(T-DEPART-VALIDATION, nb_expertises, N)
+X_train = (T-DEPART-VALIDATION, N, nb_expertises)
 Y_train = (T-DEPART-VALIDATION, 1)
-X_test  = (         VALIDATION, N, nb_expertises)#(         VALIDATION, nb_expertises, N)
+X_test  = (         VALIDATION, N, nb_expertises)
 Y_test  = (         VALIDATION, 1)
 
 for la_liste in 'X_train', 'Y_train', 'X_test', 'Y_test':
@@ -94,40 +84,24 @@ for la_liste in 'X_train', 'Y_train', 'X_test', 'Y_test':
 
 #	============================================================	#
 
-def ffn(M, N):
-	return Sequential([
-		Dropout(0.20),
-		Dense(N, activation='relu'),
-		Dropout(0.20),
-		Dense(M),
-	])
-
 if __name__ == "__main__":
-	#
-	#	Faire le systeme de trade ouvert 5 (ou 4) unitées de temps
-	#
 	entree = Input((N, nb_expertises))#Input((nb_expertises, N))
 	x = entree
-	#
-	#x = Dropout(0.10)(x)
 	#
 	#Conv1D, SeparableConv1D, DepthwiseConv1D, Conv1DTranspose,
 	x = Conv1D(64, 3)(x)	#8 -> 6
 	x = Conv1D(32, 3)(x)	#6 -> 4
 	x = Conv1D(16, 3)(x)	#4 -> 2
-	#x = x*x
-	#x = AveragePooling1D(2)(x)		#8 -> 4
 	#
 	x = Flatten()(x)
 	x = Dropout(0.10)(x)
 	#
 	x = Dense(128, activation='relu')(x); x = Dropout(0.50)(x)
 	#
-	x = Dense(SORTIES)(x)
+	x = Dense(U, activation='softmax')(x)
 
 	model = Model(entree, x)
-	#model.compile(optimizer=SGD(learning_rate=1e-6), loss=custom_loss)
-	model.compile(optimizer=Adam(learning_rate=1e-5), loss=custom_loss)
+	model.compile(optimizer=Adam(learning_rate=1e-5), loss='binary_crossentropy')#custom_loss)
 	model.summary()
 
 	############################ Entrainnement #########################
