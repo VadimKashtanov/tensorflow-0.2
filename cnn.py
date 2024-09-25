@@ -60,6 +60,8 @@ if __name__ == "__main__":
 	entree = Input((N, nb_expertises))#Input((nb_expertises, N))
 	x = entree
 	#
+	x = LayerNorm()(x)
+	#
 	#Conv1D, SeparableConv1D, DepthwiseConv1D, Conv1DTranspose,
 	x = Conv1D(64, 3)(x)	#8 -> 6
 	x = Conv1D(32, 3)(x)	#6 -> 4

@@ -24,13 +24,14 @@ print(intervalles)
 
 if __name__ == "__main__":
 	A = int(1 + (1+len(infos))**.5)
-	fig, ax = plt.subplots(A, A)
+	fig, ax = plt.subplots(1+len(infos)//A, A)
 	#
 	for i,nom in enumerate(infos):
 		print(i)
 		for I in intervalles:
 			ax[i//A][i%A].plot(interv_dfs[I][nom], label=f'{nom} I={I}')
 		ax[i//A][i%A].legend()
+	#
 	plt.show()
 
 """Expertises = [
@@ -48,19 +49,15 @@ N = 8
 MAX_I    = 8
 MAX_ROLL = N*MAX_I
 
-Expertises = [
-	#[df['Close']/ema(df['Close'], K=1  ) -1,	(1,  ),],
-	#[100*(df['Close']/ema(df['Close'], K=1.5  ) -1),	(1,  ),],
-	[1000*(df['Close']/ema(df['Close'], K=2  ) -1),	(1,  ),],
-	#[100*(df['Close']/ema(df['Close'], K=5  ) -1),	(1,  ),],
-	#[100*(df['Close']/ema(df['Close'], K=10  ) -1),	(1,  ),],
+courbe_ematique = lambda l, K: (l/ema(l, 1+K) - 2)
 
-	#[20*(df['Close']/df['Close'].ewm(com=250 ).mean()-1),	(64, ),],
-	#[10*(df['Close']/df['Close'].ewm(com=1000).mean()-1),	(256,),],
+Expertises = [
+	{'l':1000*courbe_ematique(interv_dfs[1]['Close']),   'interv':1},
+] + [
 ]
+
 for i in range(len(Expertises)): Expertises[i][0] = list(Expertises[i][0])[MAX_ROLL:]
 
-#montrer(Expertises[6], 3, N)
 nb_expertises = sum([1 for _,e in Expertises for i in e])
 print(f"Expertises : {nb_expertises}")
 
@@ -101,6 +98,7 @@ CLASSES = 2
 SORTIES = CLASSES + 0 #+1 (pour un h)
 
 #	============================================================	#
+
 if __name__ == "__main__":
 	print("Création des données ...")
 
