@@ -127,9 +127,9 @@ if __name__ == "__main__":
 	ecrire_le_csv(temporalitée, elements, nom_csv)
 	
 	print("")
-	print(" =============================================== ")
+	print("\033[92m===============================================\033[0m")
 	print("")
 
-	from reparer_un_csv import reparer_un_csv
+	from os import system
 
-	reparer_un_csv(nom_csv)
+	system(f"python3 reparer_un_csv.py {nom_csv} Open-High-Low-Close-qaV-trades-btcVol-usdtVol")

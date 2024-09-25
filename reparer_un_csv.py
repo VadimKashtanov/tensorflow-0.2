@@ -1,18 +1,9 @@
-def reparer_un_csv(fichier):
-	colonnes = "OUnix,CUnix,ODate,CDate,Symbol,Open,High,Low,Close,qaV,trades,btcVol,usdtVol"
-	fichier  = './binance_btcusdt_15m.csv'
-	date     = 'Date'
-	close    = 'Close'
-	
-	df = pd.read_csv(fichier)
-	print(df)
+import pandas as pd
 
-	#	========================================	#
-	#	============= Extraction ===============	#
-	#	========================================	#
+def reparer_un_csv(fichier, colonnes):
+	df = pd.read_csv(fichier)
 	
-	#	Si des valeurs se répètent
-	for colonne in 'Open', 'High', 'Low', 'Close', 'qaV', 'trades', 'btcVol', 'usdtVol':
+	for colonne in colonnes:
 		print(f" ############ Verification des {colonne} ############ ")
 		for i in range(1, len(df)-1):
 			if df[colonne].iloc[i-1] == df[colonne].iloc[i]:
@@ -32,6 +23,11 @@ def reparer_un_csv(fichier):
 			if df[colonne].iloc[i-1] == 0:
 				print(f"\033[92mValeure nulle        (Odata={df['ODate'][i]}): {list(df[colonne].iloc[i-2:i+2])}\033[0m")
 
-	#	============================================
-
 	df.to_csv(fichier, index=False)
+
+if __name__ == "__main__":
+	from sys import argv
+
+	csv, colonnes = argv[1], argv[2].split('-')
+
+	reparer_un_csv(csv, colonnes)
