@@ -1,13 +1,15 @@
 import numpy as np
 import pandas as pd
 
-def macd(l):
-	ema12 = l.ewm(com=12).mean()
-	ema26 = l.ewm(com=26).mean()
+ema = lambda l,K: l.ewm(com=K-1).mean()
+
+def macd(l, I=1):
+	ema12 = ema(l, 12*I)
+	ema26 = ema(l, 26*I)
 	return ema12 - ema26
 
-def ligne_rouge(l):
-	ema9 = l.ewm(com=9).mean()
+def ligne_rouge(l, I):
+	ema9 = ema(l, 9*I)
 	return l - ema9
 
 ############################################################################################################
@@ -15,7 +17,7 @@ def ligne_rouge(l):
 
 def interv_iser(df, infos, I):
 	ret = pd.DataFrame()
-	for info in infos: ret[info] = df[info].ewm(com=1.0 * I).mean()
+	for info in infos: ret[info] = ema(df[info], 1*I)
 	return ret
 
 ############################################################################################################
@@ -55,7 +57,14 @@ def binance_btcusdt_15m(verbose=False):
 	#	========================================	#
 
 	for I in intervalles:
-		interv_dfs[I]['macd_Close'      ] = macd(interv_dfs[I]['Close'])
-		interv_dfs[I]['macd_rouge_Close'] = ligne_rouge(interv_dfs[I]['macd_Close'])
+		interv_dfs[I]['macd_Close'      ] = macd(interv_dfs[I]['Close'], I=I)
+		interv_dfs[I]['macd_rouge_Close'] = ligne_rouge(interv_dfs[I]['macd_Close'], I=I)
+
+	DEPART_analyses_techniques = max(intervalles) * 26
+
+	for I in intervalles:
+		interv_dfs[I] = interv_dfs[I][DEPART_analyses_techniques:].reset_index(drop=True)
+	
+	df = df[DEPART_analyses_techniques:].reset_index(drop=True)
 
 	return df, (interv_dfs, infos, intervalles), (close, date)

@@ -2,6 +2,8 @@
 
 from from_import import *
 
+ema = lambda l,K: l.ewm(com=K-1).mean()
+
 #	======================================================================
 
 def montrer(l, i, N):
@@ -17,17 +19,19 @@ from csv_vers_panda import binance_btcusdt_15m
 df, (interv_dfs, infos, intervalles), (Close, la_Date) = binance_btcusdt_15m(verbose=(__name__ == "__main__"))
 print(df)
 
-if __name__ == "__main__":
-	#
-	A = int(1 + len(infos)**.5)
-	fig, ax = plt.subplots(A, A)
-	for i,nom in enumerate(infos):
-		for j,I in enumerate(intervalles):
-			ax[i%2][i//2].plot(interv_dfs[j][nom], label=f'{nom} I={I}')
-		ax[i%2][i//2].legend()
-	plt.show()
+print(infos)
+print(intervalles)
 
-VALIDATION = 2048
+if __name__ == "__main__":
+	A = int(1 + (1+len(infos))**.5)
+	fig, ax = plt.subplots(A, A)
+	#
+	for i,nom in enumerate(infos):
+		print(i)
+		for I in intervalles:
+			ax[i//A][i%A].plot(interv_dfs[I][nom], label=f'{nom} I={I}')
+		ax[i//A][i%A].legend()
+	plt.show()
 
 """Expertises = [
 	[60*(df['Close']/df['Close'].ewm(com=5   ).mean()-1),	(1,        ),],
@@ -80,6 +84,7 @@ if __name__ == "__main__":
 	for i,(l,_) in enumerate(Expertises): ax[i//A][i%A].plot(l)
 	plt.show()
 
+VALIDATION = 2048
 T      = len(Expertises[0][0])
 DEPART = N * MAX_I
 
@@ -89,9 +94,11 @@ print(f'DEPART={DEPART} T={T} VALIDATION={VALIDATION}')
 print(f'Train T = {T-DEPART-VALIDATION}')
 print(f'Test  T = {VALIDATION}')
 
-SORTIES = 2
-
 U = 4
+
+CLASSES = 2
+
+SORTIES = CLASSES + 0 #+1 (pour un h)
 
 #	============================================================	#
 if __name__ == "__main__":
