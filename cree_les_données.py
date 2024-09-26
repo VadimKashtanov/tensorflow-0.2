@@ -6,10 +6,14 @@ ema = lambda l,K: l.ewm(com=K-1).mean()
 
 #	======================================================================
 
-def montrer(l, i, N):
-	ligne, intervs = l[0], l[1][i]
-	plt.plot(ligne)
-	plt.plot([len(ligne)-N*i+j*i+1 for j in range(N)], [random()-.5 for j in range(N)]);
+def montrer(*_ls):
+	A = int(1 + len(_l)**.5)
+	fig, ax = plt.subplots(1+len(_l)//A, A)
+	for i,ls in enumerate(_ls):
+		for l in ls:
+			ax[i//A][i%A].plot(l, label=f'{i}')
+		ax[i//A][i%A].legend()
+		ax[i//A][i%A].grid(True)
 	plt.show()
 
 #	======================================================================
@@ -23,51 +27,44 @@ print(infos)
 print(intervalles)
 
 if __name__ == "__main__":
-	A = int(1 + (1+len(infos))**.5)
-	fig, ax = plt.subplots(1+len(infos)//A, A)
-	#
-	for i,nom in enumerate(infos):
-		print(i)
-		for I in intervalles:
-			ax[i//A][i%A].plot(interv_dfs[I][nom], label=f'{nom} I={I}')
-		ax[i//A][i%A].legend()
-	#
-	plt.show()
+	montrer([
+		[interv_dfs[I][nom] for I in intervalles]
+		for nom in infos
+	])
 
-"""Expertises = [
-	[60*(df['Close']/df['Close'].ewm(com=5   ).mean()-1),	(1,        ),],
-	[40*(df['Close']/df['Close'].ewm(com=25  ).mean()-1),	(1,8       ),],
-	[20*(df['Close']/df['Close'].ewm(com=250 ).mean()-1),	(1,8,64,   ),],
-	[10*(df['Close']/df['Close'].ewm(com=1000).mean()-1),	(1,8,64,256),],
-	#
-	[ .2*(df['trades']/df['trades'].ewm(com=5   ).mean()),	(1,8       ),],
-	[ .1*(df['trades']/df['trades'].ewm(com=100 ).mean()),	(1,8,64    ),],
-	[ .1*(df['trades']/df['trades'].ewm(com=1000).mean()),	(1,8,64,256),],
-]"""
+#	============================================================================================
 
+intervs = (1,)
 N = 8
 MAX_I    = 8
 MAX_ROLL = N*MAX_I
 
-courbe_ematique = lambda l, K: (l/ema(l, 1+K) - 2)
+courbe_ematique = lambda l, K: (l[MAX_ROLL:] / np.roll(ema(l, K), MAX_ROLL)[MAX_ROLL:] - 2)
 
-Expertises = [
-	{'l':1000*courbe_ematique(interv_dfs[1]['Close']),   'interv':1},
-] + [
+E = lambda I: [
+	courbe_ematique(interv_dfs[I]['Close'   ], I),
+	courbe_ematique(interv_dfs[I]['trades'  ], I),
+	courbe_ematique(interv_dfs[I]['qaV'     ], I),
+	#courbe_ematique(interv_dfs[I]['btcVol' ], I),
+	#courbe_ematique(interv_dfs[I]['usdtVol'], I),
+	courbe_ematique(interv_dfs[I]['volume'  ], I),
 ]
 
-for i in range(len(Expertises)): Expertises[i][0] = list(Expertises[i][0])[MAX_ROLL:]
+Expertises = [expertise for I in intervs for expertise in E(I)]
 
-nb_expertises = sum([1 for _,e in Expertises for i in e])
-print(f"Expertises : {nb_expertises}")
+nb_expertises = len(Expertises)
+
+print(f"nb_expertises : {nb_expertises}")
+
+#	============================================================================================
 
 if __name__ == "__main__":
 	fig,ax = plt.subplots(2,2)
 	L = 300
 	f = lambda x: x*(x>0)
-	for j,(l,_) in enumerate(Expertises): ax[0][0].plot(l[-L:], label=f'{j}')
-	for j,(l,_) in enumerate(Expertises): ax[0][1].plot(np.convolve(l[-L:], np.array([-1, -1, 3, 0, 0]), "same"), label=f'{j}')
-	for j,(l,_) in enumerate(Expertises): ax[1][1].plot(f(np.convolve(l[-L:], np.array([-1, -1, 3, 0, 0]), "same")), label=f'{j}')
+	for j,e in enumerate(Expertises): ax[0][0].plot(e['l'][-L:], label=f'{j}')
+	for j,e in enumerate(Expertises): ax[0][1].plot(np.convolve(e['l'][-L:], np.array([-1, -1, 3, 0, 0]), "same"), label=f'{j}')
+	for j,e in enumerate(Expertises): ax[1][1].plot(f(np.convolve(e['l'][-L:], np.array([-1, -1, 3, 0, 0]), "same")), label=f'{j}')
 	ax[0][0].legend()
 	ax[1][0].plot(np.array(df['Close'][MAX_ROLL:][-L:]))
 	for i in range(2):
@@ -81,8 +78,15 @@ if __name__ == "__main__":
 	for i,(l,_) in enumerate(Expertises): ax[i//A][i%A].plot(l)
 	plt.show()
 
+	montrer([
+		[interv_dfs[I][nom] for I in intervalles]
+		for e in Expertises
+	])
+
+#	============================================================================================
+
 VALIDATION = 2048
-T      = len(Expertises[0][0])
+T      = len(Expertises[0]['l'])
 DEPART = N * MAX_I
 
 assert T-DEPART > VALIDATION
@@ -97,7 +101,7 @@ CLASSES = 2
 
 SORTIES = CLASSES + 0 #+1 (pour un h)
 
-#	============================================================	#
+#	============================================================================================
 
 if __name__ == "__main__":
 	print("Création des données ...")
