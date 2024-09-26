@@ -33,20 +33,21 @@ def binance_btcusdt_15m(verbose=False):
 	date     = 'Date'
 	close    = 'Close'
 	
-	df = pd.read_csv(fichier)
+	df = pd.read_csv(fichier)#[-(16 + 26*4 + 8*4 + 8*4 + 4 + 1):]
 	print(df)
 
 	#	+++
 	df['volume'] = df['btcVol'] - df['usdtVol'] / df['Close']
+	df['diff_M'] = (df['High'] - df['Close'])/(df['High'] - df['Low'])
 	#	+++
 	
 	#	========================================	#
 	#	================ Interv ================	#
 	#	========================================	#
 
-	infos  = 'Open', 'High', 'Low', 'Close', 'qaV', 'trades', 'btcVol', 'usdtVol', 'volume'
+	infos  = 'Open', 'High', 'Low', 'Close', 'qaV', 'trades', 'btcVol', 'usdtVol', 'volume', 'diff_M'
 
-	intervalles = 1, 4, 16, 64, 256
+	intervalles = 1, 4,# 16, 64, 256
 
 	interv_dfs = {
 		I : interv_iser(df, infos, I=I) for I in intervalles
@@ -66,5 +67,7 @@ def binance_btcusdt_15m(verbose=False):
 		interv_dfs[I] = interv_dfs[I][DEPART_analyses_techniques:].reset_index(drop=True)
 	
 	df = df[DEPART_analyses_techniques:].reset_index(drop=True)
+
+	infos  = infos + ('macd_Close', 'macd_rouge_Close')
 
 	return df, (interv_dfs, infos, intervalles), (close, date)

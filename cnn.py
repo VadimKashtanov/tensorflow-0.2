@@ -5,6 +5,25 @@ from from_import import *
 ###################################################
 
 @register_keras_serializable()
+class AffineTransformPerVector(Layer):
+	def __init__(self, **kwargs):
+		super(AffineTransformPerVector, self).__init__(**kwargs)
+
+	def build(self, input_shape):
+		S =  (*input_shape[1:-1], 1,)
+		self.alpha = self.add_weight(shape=S,
+									 initializer='ones',
+									 trainable=True,
+									 name='alpha')
+		self.beta = self.add_weight(shape=S,
+									initializer='zeros',
+									trainable=True,
+									name='beta')
+
+	def call(self, x):
+		return self.alpha * x + self.beta
+
+@register_keras_serializable()
 def t2d(x): return tf.transpose(x, perm=[0, 2, 1])
 @register_keras_serializable()
 def tos(input_shape): return (input_shape[0], input_shape[2], input_shape[1])
@@ -42,12 +61,12 @@ def custom_loss(y_true, y_pred):
 
 #	============================================================	#
 
-from cree_les_données import df, VALIDATION, N, nb_expertises, T, DEPART, SORTIES
+from cree_les_données import df, VALIDATION, N, nb_expertises, T, DEPART, SORTIES, CLASSES, U
 
 X_train = (T-DEPART-VALIDATION, N, nb_expertises)
-Y_train = (T-DEPART-VALIDATION, 1)
+Y_train = (T-DEPART-VALIDATION, CLASSES)
 X_test  = (         VALIDATION, N, nb_expertises)
-Y_test  = (         VALIDATION, 1)
+Y_test  = (         VALIDATION, CLASSES)
 
 for la_liste in 'X_train', 'Y_train', 'X_test', 'Y_test':
 	with open(la_liste, 'rb') as co:
@@ -57,25 +76,45 @@ for la_liste in 'X_train', 'Y_train', 'X_test', 'Y_test':
 #	============================================================	#
 
 if __name__ == "__main__":
-	entree = Input((N, nb_expertises))#Input((nb_expertises, N))
+	entree = Input((N, nb_expertises))
 	x = entree
 	#
-	x = LayerNorm()(x)
+	#x = LayerNorm()(x)
+	#x = AffineTransformPerVector()(x)
+	#x = Reshape((nb_expertises,N,1))(x)
+	#x = Dense(15, activation='sigmoid')(x)
 	#
 	#Conv1D, SeparableConv1D, DepthwiseConv1D, Conv1DTranspose,
-	x = Conv1D(64, 3)(x)	#8 -> 6
-	x = Conv1D(32, 3)(x)	#6 -> 4
-	x = Conv1D(16, 3)(x)	#4 -> 2
+	x = Conv1D(64, 3, activation='relu')(x)	#8 -> 6
+	x = AveragePooling1D(2)(x)				#6 -> 3
+	x = Dropout(0.30)(x)
+	#
+	x = Conv1D(128, 3, activation='relu')(x)	#3 -> 1
+	#x = AveragePooling1D(2)(x)					#2 -> 1
+	x = Dropout(0.30)(x)
+	#x = Conv1DTranspose(32, 3)(x)	#6 -> 4
+	#x = Conv1DTranspose(16, 3)(x)	#4 -> 2
 	#
 	x = Flatten()(x)
-	x = Dropout(0.10)(x)
+	#x = Dropout(0.30)(x)
 	#
-	x = Dense(128, activation='relu')(x); x = Dropout(0.50)(x)
+	x = Dense(64, activation='relu')(x)
+	x = Dropout(0.30)(x)
 	#
-	x = Dense(U, activation='softmax')(x)
+	"""x = Dense(128, activation='sigmoid')(x); x = Dropout(0.50)(x)
+	x = Dense(16)(x); x = Dropout(0.10)(x)
+	#
+	x = Dense(32)(x); x = Dropout(0.10)(x)
+	x = Dense(32)(x); x = Dropout(0.10)(x)
+	x = Dense(32)(x); x = Dropout(0.10)(x)"""
+	#
+	#x = Dense(128, activation='sigmoid')(x); x = Dropout(0.50)(x)
+	x = Dense(SORTIES, activation='softmax')(x)
 
 	model = Model(entree, x)
-	model.compile(optimizer=Adam(learning_rate=1e-5), loss='binary_crossentropy')#custom_loss)
+	#model.compile(optimizer=Adam(learning_rate=1e-5), loss='binary_crossentropy')#custom_loss)
+	model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+	#model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 	model.summary()
 
 	############################ Entrainnement #########################
@@ -84,7 +123,7 @@ if __name__ == "__main__":
 	meilleur_validation = ModelCheckpoint('meilleur_model.h5.keras', monitor='val_loss', save_best_only=True)
 	meilleur_train      = ModelCheckpoint('dernier__model.h5.keras', monitor='loss'    , save_best_only=True)
 	
-	history = model.fit(X_train, Y_train, epochs=200, batch_size=256, validation_data=(X_test,Y_test), shuffle=True,
+	history = model.fit(X_train, Y_train, epochs=150, batch_size=256, validation_data=(X_test,Y_test), shuffle=True,
 		callbacks=[
 			meilleur_validation, meilleur_train
 		]

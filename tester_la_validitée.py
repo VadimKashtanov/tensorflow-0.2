@@ -14,38 +14,52 @@ model = load_model(argv[1])
 
 ############################    Tester     #########################
 
+prixs_test  = np.array(df['Close'][-VALIDATION:])
+prixs_train = np.array(df['Close'][:-VALIDATION])
+
 Y_pred_train = model.predict(X_train)
 Y_pred_test  = model.predict(X_test )
 
 print(f'y_test = {Y_test[0:50]}')
 print(f'y_pred = {Y_pred_test[0:50]}')
 
-Y_test          = list(w for w,  in Y_test)
-predictions     = list(y for y,h in Y_pred_test)
-investissements = list(h for y,h in Y_pred_test)
+#	Validation[VALIDATION]
+Y0_test = list(w0 for w0,w1  in Y_test)
+Y1_test = list(w1 for w0,w1  in Y_test)
+s0_test = list(s0 for s0,s1, in Y_pred_test)
+s1_test = list(s1 for s0,s1, in Y_pred_test)
 
-Y_train               = list(w for w,  in Y_train)
-predictions_train     = list(y for y,h in Y_pred_train)
-investissements_train = list(h for y,h in Y_pred_train)
+#	Train:[T-DEPART-VALIDATION]
+Y0_train = list(w0 for w0,w1, in Y_train)
+Y1_train = list(w1 for w0,w1  in Y_train)
+s0_train = list(s0 for s0,s1, in Y_pred_train)
+s1_train = list(s1 for s0,s1, in Y_pred_train)
 
 ####################################################################
 
 fig, ax = plt.subplots(2)
 
-ax[0].plot(Y_test,          label='Valeurs réelles',  color='blue')
-ax[0].plot(predictions,     label='Prédictions',      color='red')
-ax[1].plot(investissements, label='% Investissement', color='green')
-ax[1].plot([0]*len(Y_test), label='zéro',             color='red')
+#	--
+ax[0].plot(Y0_test, '-',  label='Valeurs réelles Y0',  color='green')
+ax[0].plot(Y1_test, '-',  label='Valeurs réelles Y1',  color='red'  )
+ax[0].plot(s0_test, '--', label='Prédictions S0',      color='green')
+ax[0].plot(s1_test, '--', label='Prédictions S1',      color='red'  )
+ax[0].grid(True)
+ax[0].legend()
 
 #	Flèches
-for t in range(VALIDATION):
-	pred       = predictions[t]
-	point_prix = Y_test     [t]
-	if pred >= 0.0: ax[0].plot([t, t+1], [point_prix, point_prix + 0.03], 'g')
-	else:           ax[0].plot([t, t+1], [point_prix, point_prix - 0.03], 'r')
+p = normer(prixs_test)
+plt.plot(p, label='Prixs', color='black')
 #
-ax[0].legend()
+for t in range(VALIDATION):
+	pred       = s0_test[t] - s1_test[t]
+	point_prix = p[t]
+	if pred >= 0.0: ax[1].plot([t, t+U], [point_prix, point_prix + 0.05], 'g')
+	else:           ax[1].plot([t, t+U], [point_prix, point_prix - 0.05], 'r')
+ax[1].grid(True)
 ax[1].legend()
+
+#	--
 plt.show()
 
 ####################################################################
