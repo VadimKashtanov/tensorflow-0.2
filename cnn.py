@@ -5,6 +5,17 @@ from from_import import *
 ###################################################
 
 @register_keras_serializable()
+class DiscretizationLayer(Layer):
+	def __init__(self, thresholds, **kwargs):
+		super(DiscretizationLayer, self).__init__(**kwargs)
+		self.thresholds = thresholds
+
+	def call(self, inputs):
+		# Utiliser tf.digitize pour discrétiser selon les seuils
+		discretized = tf.raw_ops.Bucketize(input=inputs, boundaries=self.thresholds)
+		return tf.cast(discretized, tf.float32)
+		
+@register_keras_serializable()
 class AffineTransformPerVector(Layer):
 	def __init__(self, **kwargs):
 		super(AffineTransformPerVector, self).__init__(**kwargs)
@@ -75,46 +86,36 @@ for la_liste in 'X_train', 'Y_train', 'X_test', 'Y_test':
 
 #	============================================================	#
 
+def couche_convolution(f, k=3, activation='gelu'):
+	return Sequential([
+		Conv1D(f, k, activation=activation),
+		BatchNormalization(),
+		AveragePooling1D(2),
+		Dropout(0.30)
+	])
+
 if __name__ == "__main__":
 	entree = Input((N, nb_expertises))
 	x = entree
 	#
-	#x = LayerNorm()(x)
-	#x = AffineTransformPerVector()(x)
-	#x = Reshape((nb_expertises,N,1))(x)
-	#x = Dense(15, activation='sigmoid')(x)
-	#
 	#Conv1D, SeparableConv1D, DepthwiseConv1D, Conv1DTranspose,
-	x = Conv1D(64, 3, activation='relu')(x)	#8 -> 6
-	x = AveragePooling1D(2)(x)				#6 -> 3
+	#
+	x = couche_convolution(64, 5, 'linear')(x)	#8 -> 4 -> 2
+	#x = couche_convolution(32, 3, 'linear')(x)	#6 -> 4
+	#x = couche_convolution(64, 3, 'linear')(x)	#4 -> 2
+	#
+	#-----------------#
+	x = Flatten()(x)  #
+	#-----------------#
+	#
+	x = Dense(128, activation='relu')(x)
 	x = Dropout(0.30)(x)
 	#
-	x = Conv1D(128, 3, activation='relu')(x)	#3 -> 1
-	#x = AveragePooling1D(2)(x)					#2 -> 1
-	x = Dropout(0.30)(x)
-	#x = Conv1DTranspose(32, 3)(x)	#6 -> 4
-	#x = Conv1DTranspose(16, 3)(x)	#4 -> 2
-	#
-	x = Flatten()(x)
-	#x = Dropout(0.30)(x)
-	#
-	x = Dense(64, activation='relu')(x)
-	x = Dropout(0.30)(x)
-	#
-	"""x = Dense(128, activation='sigmoid')(x); x = Dropout(0.50)(x)
-	x = Dense(16)(x); x = Dropout(0.10)(x)
-	#
-	x = Dense(32)(x); x = Dropout(0.10)(x)
-	x = Dense(32)(x); x = Dropout(0.10)(x)
-	x = Dense(32)(x); x = Dropout(0.10)(x)"""
-	#
-	#x = Dense(128, activation='sigmoid')(x); x = Dropout(0.50)(x)
 	x = Dense(SORTIES, activation='softmax')(x)
 
 	model = Model(entree, x)
 	#model.compile(optimizer=Adam(learning_rate=1e-5), loss='binary_crossentropy')#custom_loss)
 	model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-	#model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 	model.summary()
 
 	############################ Entrainnement #########################

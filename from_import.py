@@ -13,7 +13,7 @@ from keras import backend as K
 from tensorflow.keras.layers import Input, Dropout, Flatten, Permute, Reshape, Lambda
 from tensorflow.keras.layers import Dense, Activation, Multiply
 from tensorflow.keras.layers import Conv1D, MaxPooling1D, AveragePooling1D
-from tensorflow.keras.layers import LayerNormalization
+from tensorflow.keras.layers import BatchNormalization, LayerNormalization
 from tensorflow.keras.layers import Conv1D, SeparableConv1D, DepthwiseConv1D, Conv1DTranspose
 #
 from keras_nlp.layers import PositionEmbedding, TransformerEncoder, TransformerDecoder
